@@ -24,7 +24,7 @@ class ImageDownloader:
       print(e)
       exit(0)
 
-  def download(self, keyword, directory='images', extensions={'.jpg', '.png', '.jpeg'}):
+  def download(self, keyword, directory='images', extensions={'.png', '.jpeg'}):
     if not os.path.exists(directory):
       os.makedirs(directory)
 
