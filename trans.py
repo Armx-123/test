@@ -24,7 +24,7 @@ class ImageDownloader:
       print(e)
       exit(0)
 
-  def download(self, keyword, directory='images', extensions={'.jpg','.png', '.jpeg'}):
+  def download(self, keyword, directory='images', extensions={'.jpg', '.png', '.jpeg'}):
     if not os.path.exists(directory):
       os.makedirs(directory)
 
@@ -34,8 +34,8 @@ class ImageDownloader:
 
     end_object = -1
     skipped = 0  # Counter for skipped images
+    download_success = False 
 
-    # Locate the first valid image URL after skipping 3 images
     while True:
       try:
         new_line = raw_html.find('"https://', end_object + 1)
@@ -52,31 +52,33 @@ class ImageDownloader:
           if skipped > 3:  # Skip the first 3 valid images
             break
 
+        # Download the image
+        r = requests.get(object_raw, allow_redirects=True, timeout=1)
+        if 'html' not in str(r.content):
+          # Extract file extension from URL (assuming it's valid)
+          file_extension = os.path.splitext(object_raw)[1].lower()
+
+          if file_extension not in extensions:
+            continue  # Skip to the next URL if format is unsupported
+
+          file_name = f"{keyword.replace(' ', '_')}{file_extension}"
+          file_path = os.path.join(directory, file_name)
+
+          with open(file_path, 'wb') as file:
+            file.write(r.content)
+          print(f"Image saved as {file_path}")
+          download_success = True 
+          break 
+
       except Exception as e:
-        print(f"Error finding image: {e}")
-        return
+        print(f"Error downloading image: {e}")
+        continue  # Continue to the next URL on any error
 
-    # Download the image
-    try:
-      r = requests.get(object_raw, allow_redirects=True, timeout=1)
-      if 'html' not in str(r.content):
-        # Extract file extension from URL (assuming it's valid)
-        file_extension = os.path.splitext(object_raw)[1].lower()
+      if download_success:
+        break
 
-        if file_extension not in extensions:
-          raise ValueError("Unsupported image format")
-
-        file_name = f"{keyword.replace(' ', '_')}{file_extension}"
-        file_path = os.path.join(directory, file_name)
-
-        with open(file_path, 'wb') as file:
-          file.write(r.content)
-        print(f"Image saved as {file_path}")
-
-      else:
-        print("No valid image found.")
-    except Exception as e:
-      print(f"Error downloading image: {e}")
+    if not download_success:
+      print("No valid image found.")
 
   @staticmethod
   def get_image_dimensions(image_path):
@@ -87,4 +89,4 @@ class ImageDownloader:
 # Usage example
 if __name__ == "__main__":
   downloader = ImageDownloader()
-  downloader.download("hello")
+  downloader.download("beautiful park sunny day")
