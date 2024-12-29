@@ -87,4 +87,4 @@ class ImageDownloader:
 # Usage example
 if __name__ == "__main__":
   downloader = ImageDownloader()
-  downloader.download("beautiful park sunny day")
+  downloader.download("hello")
