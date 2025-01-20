@@ -19,28 +19,31 @@ service = Service(chrome_driver_path)
 driver = webdriver.Chrome(service=service, options=options)
 
 try:
-    # YouTube channel URL (replace with the desired creator's channel URL)
+    # Replace with the desired YouTube channel URL (without '/videos')
     channel_url = "https://www.youtube.com/@Onevilage"
 
     # Open the channel page
     driver.get(channel_url)
 
-    # Extract subscriber count
-    subscriber_count_element = driver.find_element(By.CSS_SELECTOR, "#subscriber-count")
-    subscriber_count = subscriber_count_element.text
-    print(f"Subscriber count: {subscriber_count}")
-
-    # Scroll to the "Videos" tab (if not already on the videos tab)
-    videos_tab = driver.find_element(By.XPATH, "//a[contains(@href, '/videos')]")
-    videos_tab.click()
-
     # Wait for the page to load
     driver.implicitly_wait(5)
 
-    # Extract the latest video title and link
-    latest_video = driver.find_element(By.CSS_SELECTOR, "#video-title")
-    latest_video_title = latest_video.get_attribute("title")
-    latest_video_url = latest_video.get_attribute("href")
+    # Extract subscriber count
+    subscriber_count_element = driver.find_element(
+        By.CSS_SELECTOR,
+        "span.yt-core-attributed-string[role='text']",
+    )
+    subscriber_count = subscriber_count_element.text
+    print(f"Subscriber count: {subscriber_count}")
+
+    # Navigate to the Videos tab
+    driver.get(f"{channel_url}/videos")
+    driver.implicitly_wait(5)
+
+    # Extract the latest video title and URL
+    latest_video_element = driver.find_element(By.CSS_SELECTOR, "a#video-title-link")
+    latest_video_title = latest_video_element.get_attribute("title")
+    latest_video_url = "https://www.youtube.com" + latest_video_element.get_attribute("href")
 
     print(f"Latest video title: {latest_video_title}")
     print(f"Latest video URL: {latest_video_url}")
