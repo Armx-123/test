@@ -33,13 +33,7 @@ jobs:
 
       - name: Test env vars for python
         run: TEST_SECRET=${{ secrets.API}}
-        
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1.7.2
       - name: WithOut
-        run: python trans.py
-
-
-      - name: With
-        env:
-          HTTP_PROXY: "https://0a5d-2405-201-6804-9152-1963-8355-74fd-525c.ngrok-free.app"
-          HTTPS_PROXY: "https://0a5d-2405-201-6804-9152-1963-8355-74fd-525c.ngrok-free.app"
         run: python trans.py
