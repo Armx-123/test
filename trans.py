@@ -18,34 +18,48 @@ service = Service(chrome_driver_path)
 # Initialize the WebDriver
 driver = webdriver.Chrome(service=service, options=options)
 
+# List of channel IDs (replace with desired channel usernames or IDs)
+channel_ids = ["jeffreyxreacts", "zackdfilms", "JaySharon","duolingo","Lionfield","sigma_monkey"]
+
 try:
-    # YouTube channel base URL
-    channel_url = "https://www.youtube.com/@Onevilage"
+    for channel_id in channel_ids:
+        print(f"Fetching data for channel: {channel_id}")
 
-    # Open the channel page
-    driver.get(channel_url)
+        # Construct the channel URL
+        channel_url = f"https://www.youtube.com/@{channel_id}"
 
-    # Wait for the page to load
-    driver.implicitly_wait(10)
+        # Open the channel page
+        driver.get(channel_url)
+        driver.implicitly_wait(10)
 
-    # Extract the subscriber count
-    subscriber_count_element = driver.find_element(
-        By.XPATH, "//span[contains(@class, 'yt-core-attributed-string') and contains(text(), 'subscribers')]"
-    )
-    subscriber_count = subscriber_count_element.text
-    print(f"Subscriber count: {subscriber_count}")
+        # Extract the subscriber count
+        try:
+            subscriber_count_element = driver.find_element(
+                By.XPATH, "//span[contains(@class, 'yt-core-attributed-string') and contains(text(), 'subscribers')]"
+            )
+            subscriber_count = subscriber_count_element.text
+        except Exception as e:
+            subscriber_count = "Could not fetch subscriber count"
+            print(f"Error fetching subscriber count for {channel_id}: {e}")
 
-    # Navigate to the Shorts section of the channel
-    shorts_url = f"{channel_url}/shorts"
-    driver.get(shorts_url)
+        # Navigate to the Shorts section of the channel
+        shorts_url = f"{channel_url}/shorts"
+        driver.get(shorts_url)
+        driver.implicitly_wait(10)
 
-    # Wait for the Shorts page to load
-    driver.implicitly_wait(10)
+        # Extract the latest Short video details
+        try:
+            latest_video_element = driver.find_element(By.CSS_SELECTOR, "a.shortsLockupViewModelHostEndpoint")
+            latest_video_url = latest_video_element.get_attribute("href")
+        except Exception as e:
+            latest_video_url = "Could not fetch latest video"
+            print(f"Error fetching latest video for {channel_id}: {e}")
 
-    # Extract the latest Short video details
-    latest_video_element = driver.find_element(By.CSS_SELECTOR, "a.shortsLockupViewModelHostEndpoint")
-    latest_video_url = latest_video_element.get_attribute("href")
-    print(f"Latest Short video URL: {latest_video_url}")
+        # Print the results for the channel
+        print(f"Channel: {channel_id}")
+        print(f"Subscriber Count: {subscriber_count}")
+        print(f"Latest Short Video URL: {latest_video_url}")
+        print("-" * 50)
 
 finally:
     # Close the browser
