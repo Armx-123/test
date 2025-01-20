@@ -19,34 +19,33 @@ service = Service(chrome_driver_path)
 driver = webdriver.Chrome(service=service, options=options)
 
 try:
-    # Replace with the desired YouTube channel URL (without '/videos')
+    # YouTube channel base URL
     channel_url = "https://www.youtube.com/@Onevilage"
 
     # Open the channel page
     driver.get(channel_url)
 
     # Wait for the page to load
-    driver.implicitly_wait(5)
+    driver.implicitly_wait(10)
 
-    # Extract subscriber count
+    # Extract the subscriber count
     subscriber_count_element = driver.find_element(
-        By.CSS_SELECTOR,
-        "span.yt-core-attributed-string[role='text']",
+        By.XPATH, "//span[contains(@class, 'yt-core-attributed-string') and contains(text(), 'subscribers')]"
     )
     subscriber_count = subscriber_count_element.text
     print(f"Subscriber count: {subscriber_count}")
 
-    # Navigate to the Videos tab
-    driver.get(f"{channel_url}/videos")
-    driver.implicitly_wait(5)
+    # Navigate to the Shorts section of the channel
+    shorts_url = f"{channel_url}/shorts"
+    driver.get(shorts_url)
 
-    # Extract the latest video title and URL
-    latest_video_element = driver.find_element(By.CSS_SELECTOR, "a#video-title-link")
-    latest_video_title = latest_video_element.get_attribute("title")
-    latest_video_url = "https://www.youtube.com" + latest_video_element.get_attribute("href")
+    # Wait for the Shorts page to load
+    driver.implicitly_wait(10)
 
-    print(f"Latest video title: {latest_video_title}")
-    print(f"Latest video URL: {latest_video_url}")
+    # Extract the latest Short video details
+    latest_video_element = driver.find_element(By.CSS_SELECTOR, "a.shortsLockupViewModelHostEndpoint")
+    latest_video_url = latest_video_element.get_attribute("href")
+    print(f"Latest Short video URL: {latest_video_url}")
 
 finally:
     # Close the browser
