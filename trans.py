@@ -9,8 +9,8 @@ options.add_argument("--headless")  # Run in headless mode (no GUI)
 options.add_argument("--disable-gpu")
 options.add_argument("--no-sandbox")
 
-# Specify the path to your ChromeDriver
-chrome_driver_path = "chromedriver.exe"  # Update with your Chromedriver path
+# Specify the Chromedriver path
+chrome_driver_path = "/usr/bin/chromedriver"
 
 # Create a Service object
 service = Service(chrome_driver_path)
