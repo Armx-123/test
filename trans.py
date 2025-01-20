@@ -20,7 +20,7 @@ driver = webdriver.Chrome(service=service, options=options)
 
 try:
     # YouTube channel URL (replace with the desired creator's channel URL)
-    channel_url = "https://www.youtube.com/@YouTubeCreators"
+    channel_url = "https://www.youtube.com/@Onevilage"
 
     # Open the channel page
     driver.get(channel_url)
