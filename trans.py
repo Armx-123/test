@@ -1,15 +1,33 @@
-import requests
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 
-def get_ip_and_country():
-    # Get public IP and country from ipinfo.io
-    response = requests.get('https://ipinfo.io')
-    data = response.json()
+# Set up Chromium options
+options = Options()
+options.add_argument("--headless")  # Run in headless mode (no GUI)
+options.add_argument("--disable-gpu")
+options.add_argument("--no-sandbox")
+
+# Specify the path to your ChromeDriver
+chrome_driver_path = "chromedriver.exe"  # Update with your Chromedriver path
+
+# Create a Service object
+service = Service(chrome_driver_path)
+
+# Initialize the WebDriver
+driver = webdriver.Chrome(service=service, options=options)
+
+try:
+    # Open a website
+    driver.get("https://example.com")
     
-    ip_address = data.get('ip')
-    country = data.get('country')
-
-    print(f"IP Address: {ip_address}")
-    print(f"Country: {country}")
-
-if __name__ == "__main__":
-    get_ip_and_country()
+    # Print the title of the page
+    print("Page title:", driver.title)
+    
+    # Find an element on the page (optional example)
+    heading = driver.find_element(By.TAG_NAME, "h1")
+    print("Heading text:", heading.text)
+finally:
+    # Close the browser
+    driver.quit()
