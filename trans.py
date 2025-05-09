@@ -1,66 +1,79 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.options import Options
+import whisper_timestamped as whisper
 
-# Set up Chromium options
-options = Options()
-options.add_argument("--headless")  # Run in headless mode
-options.add_argument("--disable-gpu")
-options.add_argument("--no-sandbox")
 
-# Specify the Chromedriver path
-chrome_driver_path = "/usr/bin/chromedriver"
+def generate_srt(result, words_per_segment):
+    srt_text = ""
+    segment_count = 1
+    word_buffer = []
+    time_start, time_end = None, None
 
-# Create a Service object
-service = Service(chrome_driver_path)
+    for rs in result["segments"]:
+        for word in rs["words"]:
+            if not word_buffer:
+                # Initialize the start time for a new segment
+                time_start = word["start"]
 
-# Initialize the WebDriver
-driver = webdriver.Chrome(service=service, options=options)
+            word_buffer.append(word["text"])
+            time_end = word["end"]  # Update the end time
 
-# List of channel IDs (replace with desired channel usernames or IDs)
-channel_ids = ["jeffreyxreacts", "zackdfilms", "JaySharon","duolingo","Lionfield","sigma_monkey"]
+            # Check if the buffer has reached the desired words per segment
+            if len(word_buffer) >= words_per_segment:
+                # Format timestamps
+                time_start_formatted = "{:02d}:{:02d}:{:06.3f}".format(
+                    int(time_start // 3600),
+                    int((time_start % 3600) // 60),
+                    time_start % 60
+                )
+                time_end_formatted = "{:02d}:{:02d}:{:06.3f}".format(
+                    int(time_end // 3600),
+                    int((time_end % 3600) // 60),
+                    time_end % 60
+                )
 
-try:
-    for channel_id in channel_ids:
-        print(f"Fetching data for channel: {channel_id}")
+                # Create SRT text for the segment
+                srt_text += str(segment_count) + "\n"
+                srt_text += time_start_formatted.replace('.', ',') + " --> " + time_end_formatted.replace('.', ',') + "\n"
+                srt_text += " ".join(word_buffer) + "\n\n"
 
-        # Construct the channel URL
-        channel_url = f"https://www.youtube.com/@{channel_id}"
+                segment_count += 1
+                word_buffer = []  # Reset the buffer
 
-        # Open the channel page
-        driver.get(channel_url)
-        driver.implicitly_wait(10)
+    # Handle any remaining words in the buffer
+    if word_buffer:
+        # Format timestamps
+        time_start_formatted = "{:02d}:{:02d}:{:06.3f}".format(
+            int(time_start // 3600),
+            int((time_start % 3600) // 60),
+            time_start % 60
+        )
+        time_end_formatted = "{:02d}:{:02d}:{:06.3f}".format(
+            int(time_end // 3600),
+            int((time_end % 3600) // 60),
+            time_end % 60
+        )
 
-        # Extract the subscriber count
-        try:
-            subscriber_count_element = driver.find_element(
-                By.XPATH, "//span[contains(@class, 'yt-core-attributed-string') and contains(text(), 'subscribers')]"
-            )
-            subscriber_count = subscriber_count_element.text
-        except Exception as e:
-            subscriber_count = "Could not fetch subscriber count"
-            print(f"Error fetching subscriber count for {channel_id}: {e}")
+        # Create SRT text for the segment
+        srt_text += str(segment_count) + "\n"
+        srt_text += time_start_formatted.replace('.', ',') + " --> " + time_end_formatted.replace('.', ',') + "\n"
+        srt_text += " ".join(word_buffer) + "\n\n"
 
-        # Navigate to the Shorts section of the channel
-        shorts_url = f"{channel_url}/shorts"
-        driver.get(shorts_url)
-        driver.implicitly_wait(10)
+    return srt_text
 
-        # Extract the latest Short video details
-        try:
-            latest_video_element = driver.find_element(By.CSS_SELECTOR, "a.shortsLockupViewModelHostEndpoint")
-            latest_video_url = latest_video_element.get_attribute("href")
-        except Exception as e:
-            latest_video_url = "Could not fetch latest video"
-            print(f"Error fetching latest video for {channel_id}: {e}")
 
-        # Print the results for the channel
-        print(f"Channel: {channel_id}")
-        print(f"Subscriber Count: {subscriber_count}")
-        print(f"Latest Short Video URL: {latest_video_url}")
-        print("-" * 50)
+# Load and transcribe the audio
+audio_path = "lol.mp3"  # Replace with your audio file
+audio = whisper.load_audio(audio_path)
+model = whisper.load_model("tiny", device="cpu")
+result = whisper.transcribe(model, audio, remove_punctuation_from_words=False)
 
-finally:
-    # Close the browser
-    driver.quit()
+# Specify the number of words per segment
+words_per_segment = 1  # Adjust this value as needed
+
+# Generate SRT content
+srt_content = generate_srt(result, words_per_segment)
+
+# Write the SRT content to a file
+with open("output.srt", "w") as srt_file:
+    srt_file.write(srt_content)
+
+print("SRT file generated successfully.")
