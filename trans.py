@@ -136,26 +136,28 @@ if not data.empty:
     fig.show()
 
     # Get related search queries
+# Get related search queries
     try:
         related_queries = pytrends.related_queries()
-        keyword_data = related_queries.get(KEYWORD)
-
-        if keyword_data:
+        if isinstance(related_queries, dict) and KEYWORD in related_queries:
+            keyword_data = related_queries[KEYWORD]
+    
             top_related = keyword_data.get("top")
             rising_related = keyword_data.get("rising")
-
+    
             if isinstance(top_related, pd.DataFrame) and not top_related.empty:
                 print("\nTop Related Search Keywords:")
                 print(top_related[['query', 'value']].head(10))
-
+            else:
+                print("No top related keywords found.")
+    
             if isinstance(rising_related, pd.DataFrame) and not rising_related.empty:
                 print("\nRising Related Search Keywords:")
                 print(rising_related[['query', 'value']].head(10))
+            else:
+                print("No rising related keywords found.")
         else:
-            print("No related search keywords found.")
-
+            print("No related keywords found for the given term.")
     except Exception as e:
         print(f"Error fetching related keywords: {e}")
 
-else:
-    print("No data found for the given timeframe.")
