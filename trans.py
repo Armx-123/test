@@ -5,21 +5,24 @@ import plotly.graph_objects as go
 import pandas as pd
 import time
 
-# === Step 1: Get NID cookie using Selenium ===
 def get_cookie():
     options = Options()
     options.add_argument("--headless")
-    options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
+    options.add_argument("--disable-gpu")
+
+    # Manually set Chrome binary location
+    options.binary_location = "/usr/bin/webdriver"
+
+    # Adjust path to ChromeDriver if needed
     driver = webdriver.Chrome(options=options)
 
-    try:
-        driver.get("https://trends.google.com/")
-        time.sleep(5)  # Wait for cookies to load
-        cookie = driver.get_cookie("NID")["value"]
-    finally:
-        driver.quit()
+    driver.get("https://trends.google.com/")
+    time.sleep(5)
+    cookie = driver.get_cookie("NID")["value"]
+    driver.quit()
     return cookie
+
 
 # === Step 2: Use cookie in pytrends ===
 nid_cookie = f"NID={get_cookie()}"
