@@ -30,6 +30,13 @@ jobs:
 
       - name: Install requirements
         run: pip install -r requirements.txt
+        
+      - name: Install Chromium and Chromedriver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser chromium-chromedriver
+          which chromedriver  # Debug step to ensure Chromedriver is installed
+          echo "Chromedriver path: $(which chromedriver)"
 
       - name: Test env vars for Python
         run: echo "TEST_SECRET=${{ secrets.API }}"
