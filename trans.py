@@ -12,7 +12,7 @@ def get_cookie():
     options.add_argument("--disable-gpu")
 
     # Manually set Chrome binary location
-    options.binary_location = "/usr/bin/webdriver"
+    options.binary_location = "/usr/bin/chromedriver"
 
     # Adjust path to ChromeDriver if needed
     driver = webdriver.Chrome(options=options)
