@@ -1,17 +1,42 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from pytrends.request import TrendReq
 import plotly.graph_objects as go
 import pandas as pd
 import time
 
-# Setup pytrends
-pytrends = TrendReq(hl='en-US', tz=360, retries=3)
+# === Step 1: Get NID cookie using Selenium ===
+def get_cookie():
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-sandbox")
+    driver = webdriver.Chrome(options=options)
 
-# Choose keyword and fetch data
+    try:
+        driver.get("https://trends.google.com/")
+        time.sleep(5)  # Wait for cookies to load
+        cookie = driver.get_cookie("NID")["value"]
+    finally:
+        driver.quit()
+    return cookie
+
+# === Step 2: Use cookie in pytrends ===
+nid_cookie = f"NID={get_cookie()}"
+
+pytrends = TrendReq(
+    hl="en-US",
+    tz=360,
+    retries=3,
+    requests_args={"headers": {"Cookie": nid_cookie}}
+)
+
+# === Step 3: Fetch interest data ===
 kw_list = ["memes"]
 pytrends.build_payload(kw_list, cat=0, timeframe='now 1-d', geo='', gprop='youtube')
 data = pytrends.interest_over_time()
 
-# 🔍 Fetch related queries
+# === Step 4: Fetch related queries ===
 related = pytrends.related_queries()
 if related and 'memes' in related:
     rising = related['memes'].get('rising')
@@ -33,33 +58,28 @@ if related and 'memes' in related:
 else:
     print("\nNo related queries found.")
 
-# 📊 Continue with trend graph
+# === Step 5: Plot interest graph ===
 if not data.empty:
     data = data.reset_index()
     interest = data["memes"]
     timestamps = data["date"]
 
-    # Identify peak point
     peak_index = interest.idxmax()
     peak_time = timestamps[peak_index]
     peak_value = interest[peak_index]
 
-    # Convert to Unix + 24h
     peak_unix = int(time.mktime(peak_time.timetuple()))
     peak_plus_24h_unix = peak_unix + 86400
     print("\n📅 Best time to upload memes (Unix + 24h):", peak_plus_24h_unix)
 
-    # Detect rising and falling edges
     rising_index = None
     falling_index = None
-
     for i in range(1, len(interest)):
         if rising_index is None and interest[i] > interest[i - 1] + 10:
             rising_index = i
         if falling_index is None and i > peak_index and interest[i] < interest[i - 1] - 10:
             falling_index = i
 
-    # Create Plotly figure
     fig = go.Figure()
 
     fig.add_trace(go.Scatter(
