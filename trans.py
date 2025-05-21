@@ -137,27 +137,38 @@ if not data.empty:
 
     # Get related search queries
 # Get related search queries
+    # Get related search queries
     try:
         related_queries = pytrends.related_queries()
+        
+        # Print the full structure for debugging
+        print("\n[DEBUG] related_queries structure:")
+        print(related_queries)
+    
         if isinstance(related_queries, dict) and KEYWORD in related_queries:
             keyword_data = related_queries[KEYWORD]
     
-            top_related = keyword_data.get("top")
-            rising_related = keyword_data.get("rising")
+            if isinstance(keyword_data, dict):
+                top_related = keyword_data.get("top")
+                rising_related = keyword_data.get("rising")
     
-            if isinstance(top_related, pd.DataFrame) and not top_related.empty:
-                print("\nTop Related Search Keywords:")
-                print(top_related[['query', 'value']].head(10))
-            else:
-                print("No top related keywords found.")
+                if isinstance(top_related, pd.DataFrame) and not top_related.empty:
+                    print("\nTop Related Search Keywords:")
+                    print(top_related[['query', 'value']].head(10))
+                else:
+                    print("No top related keywords found.")
     
-            if isinstance(rising_related, pd.DataFrame) and not rising_related.empty:
-                print("\nRising Related Search Keywords:")
-                print(rising_related[['query', 'value']].head(10))
+                if isinstance(rising_related, pd.DataFrame) and not rising_related.empty:
+                    print("\nRising Related Search Keywords:")
+                    print(rising_related[['query', 'value']].head(10))
+                else:
+                    print("No rising related keywords found.")
             else:
-                print("No rising related keywords found.")
+                print(f"Unexpected keyword_data format: {type(keyword_data)}")
         else:
-            print("No related keywords found for the given term.")
+            print(f"No related queries found for keyword '{KEYWORD}'.")
+    
     except Exception as e:
         print(f"Error fetching related keywords: {e}")
-
+    
+    
