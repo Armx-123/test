@@ -28,6 +28,7 @@ def get_cookie():
 
 
 # Set up pytrends with proper cookie
+# Set up pytrends with proper cookie
 nid_cookie = f"NID={get_cookie()}"
 print(nid_cookie)
 pytrends = TrendReq(
@@ -37,10 +38,24 @@ pytrends = TrendReq(
     requests_args={"headers": {"Cookie": nid_cookie}}
 )
 
-# Fetch interest over time
+# Fetch interest over time with retry logic (exponential backoff)
 kw_list = [KEYWORD]
-pytrends.build_payload(kw_list, cat=0, timeframe='now 1-d', geo='', gprop='youtube')
-data = pytrends.interest_over_time()
+data = None
+max_retries = 5
+
+for attempt in range(max_retries):
+    try:
+        pytrends.build_payload(kw_list, cat=0, timeframe='now 1-d', geo='', gprop='youtube')
+        data = pytrends.interest_over_time()
+        if not data.empty:
+            break  # Success, exit loop
+    except Exception as e:
+        wait = 2 ** attempt
+        print(f"[Attempt {attempt + 1}] Failed to fetch data: {e}. Retrying in {wait}s...")
+        time.sleep(wait)
+else:
+    print("Failed to fetch data after several attempts.")
+    data = pd.DataFrame()  # Empty fallback
 
 if not data.empty:
     data = data.reset_index()
