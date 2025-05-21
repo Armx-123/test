@@ -3,3 +3,4 @@ requests==2.32.3
 urllib3==1.26.15
 selenium==4.27.1
 pytrends==4.9.2
+plotly==6.1.0
