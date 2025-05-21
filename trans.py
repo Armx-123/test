@@ -29,6 +29,7 @@ def get_cookie():
 
 # Set up pytrends with proper cookie
 nid_cookie = f"NID={get_cookie()}"
+print(nid_cookie)
 pytrends = TrendReq(
     hl='en-US',
     tz=360,
