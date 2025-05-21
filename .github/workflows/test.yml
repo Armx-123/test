@@ -34,12 +34,5 @@ jobs:
       - name: Test env vars for Python
         run: echo "TEST_SECRET=${{ secrets.API }}"
 
-      - name: Install Chromium and Chromedriver
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y chromium-browser chromium-chromedriver
-          which chromedriver  # Debug step to ensure Chromedriver is installed
-          echo "Chromedriver path: $(which chromedriver)"
-
       - name: Run the Python script
         run: python trans.py
