@@ -30,7 +30,7 @@ class TrendReq(UTrendReq):
         return super()._get_data(url, method=method, trim_chars=trim_chars, headers=headers, **kwargs)
 
 # Use your custom TrendReq
-pytrends = TrendReq(hl='en-US', tz=360)
+pytrends = TrendReq(hl='en-US', tz=360,retries=3)
 
 # Build the request
 pytrends.build_payload(kw_list=['memes'], cat=182, timeframe='now 1-d', gprop='youtube')
