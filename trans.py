@@ -4,13 +4,36 @@ import pandas as pd
 import time
 
 # Setup pytrends
-pytrends = TrendReq(hl='en-US', tz=360,retries=3)
+pytrends = TrendReq(hl='en-US', tz=360, retries=3)
 
 # Choose keyword and fetch data
 kw_list = ["memes"]
 pytrends.build_payload(kw_list, cat=0, timeframe='now 1-d', geo='', gprop='youtube')
 data = pytrends.interest_over_time()
 
+# 🔍 Fetch related queries
+related = pytrends.related_queries()
+if related and 'memes' in related:
+    rising = related['memes'].get('rising')
+    top = related['memes'].get('top')
+
+    print("\n🔝 Top related keywords:")
+    if top is not None:
+        for i, row in top.iterrows():
+            print(f"{i+1}. {row['query']} ({row['value']})")
+    else:
+        print("No top related queries available.")
+
+    print("\n📈 Rising related keywords:")
+    if rising is not None:
+        for i, row in rising.iterrows():
+            print(f"{i+1}. {row['query']} ({row['value']})")
+    else:
+        print("No rising related queries available.")
+else:
+    print("\nNo related queries found.")
+
+# 📊 Continue with trend graph
 if not data.empty:
     data = data.reset_index()
     interest = data["memes"]
@@ -24,16 +47,16 @@ if not data.empty:
     # Convert to Unix + 24h
     peak_unix = int(time.mktime(peak_time.timetuple()))
     peak_plus_24h_unix = peak_unix + 86400
-    print("Best time to upload memes (Unix + 24h):", peak_plus_24h_unix)
+    print("\n📅 Best time to upload memes (Unix + 24h):", peak_plus_24h_unix)
 
     # Detect rising and falling edges
     rising_index = None
     falling_index = None
 
     for i in range(1, len(interest)):
-        if rising_index is None and interest[i] > interest[i-1] + 10:
+        if rising_index is None and interest[i] > interest[i - 1] + 10:
             rising_index = i
-        if falling_index is None and i > peak_index and interest[i] < interest[i-1] - 10:
+        if falling_index is None and i > peak_index and interest[i] < interest[i - 1] - 10:
             falling_index = i
 
     # Create Plotly figure
@@ -90,4 +113,4 @@ if not data.empty:
     fig.show()
 
 else:
-    print("No data found for the given timeframe.")
+    print("\nNo data found for the given timeframe.")
