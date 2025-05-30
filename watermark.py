@@ -56,7 +56,7 @@ def handle_error(error):
     print(f"Error encountered: {error}\nRunning recovery scripts...")
     with open("error.txt", "w") as error_file:
         error_file.write(str(error))
-    subprocess.run([sys.executable, "Python Files/sorter/download.py"], check=True)
+    
     print("Recovery scripts executed. Retrying processing...")
 
 def process_single_video(music_folder, video_file, output_folder, threshold=5000):
