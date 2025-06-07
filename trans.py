@@ -1,4 +1,5 @@
 import time
+import json
 import pandas as pd
 from pytrends.request import TrendReq
 from selenium import webdriver
@@ -27,10 +28,10 @@ def get_cookie():
     return nid
 
 
-# Set up pytrends with proper cookie
-# Set up pytrends with proper cookie
+# Get NID cookie and set up pytrends with proper cookie header
 nid_cookie = f"NID={get_cookie()}"
-print(nid_cookie)
+print(f"Using cookie: {nid_cookie}")
+
 pytrends = TrendReq(
     hl='en-US',
     tz=360,
@@ -38,17 +39,18 @@ pytrends = TrendReq(
     requests_args={"headers": {"Cookie": nid_cookie}}
 )
 
-# Fetch interest over time with retry logic (exponential backoff)
+# Keyword list for trend analysis
 kw_list = [KEYWORD]
 data = None
 max_retries = 5
 
+# Fetch interest over time with retry logic (exponential backoff)
 for attempt in range(max_retries):
     try:
         pytrends.build_payload(kw_list, cat=0, timeframe='now 1-d', geo='', gprop='youtube')
         data = pytrends.interest_over_time()
         if not data.empty:
-            break  # Success, exit loop
+            break  # Success, exit retry loop
     except Exception as e:
         wait = 2 ** attempt
         print(f"[Attempt {attempt + 1}] Failed to fetch data: {e}. Retrying in {wait}s...")
@@ -67,10 +69,18 @@ if not data.empty:
     peak_time = timestamps[peak_index]
     peak_value = interest[peak_index]
 
-    # Convert to Unix + 24h
+    # Convert peak time to Unix timestamp and add 24 hours (86400 seconds)
     peak_unix = int(time.mktime(peak_time.timetuple()))
     peak_plus_24h_unix = peak_unix + 86400
     print("Best time to upload memes (Unix + 24h):", peak_plus_24h_unix)
+
+    # Save the timestamp to JSON file
+    output = {
+        "best_upload_time_unix_plus_24h": peak_plus_24h_unix
+    }
+    with open("peak_time.json", "w") as f:
+        json.dump(output, f)
+    print("Saved best upload time to peak_time.json")
 
     # Detect rising and falling edges
     rising_index = None
@@ -82,7 +92,7 @@ if not data.empty:
         if falling_index is None and i > peak_index and interest[i] < interest[i-1] - 10:
             falling_index = i
 
-    # Plotting the data
+    # Plot the data using Plotly
     fig = go.Figure()
 
     fig.add_trace(go.Scatter(
@@ -136,28 +146,25 @@ if not data.empty:
     fig.show()
 
     # Get related search queries
-# Get related search queries
-    # Get related search queries
     try:
         related_queries = pytrends.related_queries()
-        
-        # Print the full structure for debugging
+
         print("\n[DEBUG] related_queries structure:")
         print(related_queries)
-    
+
         if isinstance(related_queries, dict) and KEYWORD in related_queries:
             keyword_data = related_queries[KEYWORD]
-    
+
             if isinstance(keyword_data, dict):
                 top_related = keyword_data.get("top")
                 rising_related = keyword_data.get("rising")
-    
+
                 if isinstance(top_related, pd.DataFrame) and not top_related.empty:
                     print("\nTop Related Search Keywords:")
                     print(top_related[['query', 'value']].head(10))
                 else:
                     print("No top related keywords found.")
-    
+
                 if isinstance(rising_related, pd.DataFrame) and not rising_related.empty:
                     print("\nRising Related Search Keywords:")
                     print(rising_related[['query', 'value']].head(10))
@@ -167,8 +174,8 @@ if not data.empty:
                 print(f"Unexpected keyword_data format: {type(keyword_data)}")
         else:
             print(f"No related queries found for keyword '{KEYWORD}'.")
-    
     except Exception as e:
         print(f"Error fetching related keywords: {e}")
-    
-    
+
+else:
+    print("No data available to analyze.")
